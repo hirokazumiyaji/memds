@@ -1,0 +1,5 @@
+package: github.com/hirokazumiyaji/memds
+import:
+  - package: github.com/BurntSushi/toml
+  - package: github.com/ugorji/go/codec
+  - package: github.com/uber-go/zap

@@ -1,0 +1,14 @@
+hash: 3c3582877fa834cd5f76aaae1740e865b14341279616963a90442c11e521ed03
+updated: 2016-12-28T23:37:49.689083921+09:00
+imports:
+- name: github.com/BurntSushi/toml
+  version: 99064174e013895bbd9b025c31100bd1d9b590ca
+- name: github.com/uber-go/atomic
+  version: 3b8db5e93c4c02efbc313e17b2e796b0914a01fb
+- name: github.com/uber-go/zap
+  version: a5783ee4b216a927da8f839c45cfbf9d694e1467
+- name: github.com/ugorji/go
+  version: 9c7f9b7a2bc3a520f7c7b30b34b7f85f47fe27b6
+  subpackages:
+  - codec
+testImports: []
