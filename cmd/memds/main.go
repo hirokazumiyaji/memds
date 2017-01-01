@@ -16,6 +16,7 @@ func main() {
 		port       int
 		sock       string
 		bucketNum  int
+		gcCycle    int
 		configPath string
 		config     *memds.Config
 		vFlag      bool
@@ -28,6 +29,8 @@ func main() {
 	flag.StringVar(&sock, "s", "", "socket")
 	flag.IntVar(&bucketNum, "bucket_num", 10, "bucket num")
 	flag.IntVar(&bucketNum, "bn", 10, "bucket num")
+	flag.IntVar(&gcCycle, "gc_cycle", 10, "expire key gc cycle(sec)")
+	flag.IntVar(&gcCycle, "gc", 10, "expire key gc cycle(sec)")
 	flag.StringVar(&configPath, "config", "", "config path")
 	flag.StringVar(&configPath, "c", "", "config path")
 	flag.BoolVar(&vFlag, "version", false, "version")
@@ -45,6 +48,7 @@ func main() {
 		config.Port = port
 		config.Sock = sock
 		config.BucketNum = bucketNum
+		config.GCCycle = gcCycle
 	} else {
 		config, err = memds.LoadConfig(configPath)
 		if err != nil {

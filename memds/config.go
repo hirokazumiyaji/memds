@@ -6,6 +6,7 @@ type Config struct {
 	Port      int    `toml:"port"`
 	Sock      string `toml:"sock"`
 	BucketNum int    `toml:"bucket_num"`
+	GCCycle   int    `toml:"gc_cycle"`
 }
 
 func LoadConfig(p string) (*Config, error) {

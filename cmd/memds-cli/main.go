@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/hirokazumiyaji/memds/memds"
@@ -159,21 +160,31 @@ func main() {
 			}
 			var b []byte
 			enc := codec.NewEncoderBytes(&b, &mh)
-			err := enc.Encode(
-				map[string]interface{}{
-					"cmd":   tokens[0],
-					"key":   tokens[1],
-					"value": tokens[2],
-				},
-			)
+
+			sv := map[string]interface{}{
+				"cmd":   tokens[0],
+				"key":   tokens[1],
+				"value": tokens[2],
+			}
+
+			if len(tokens) >= 4 {
+				v, err := strconv.ParseInt(tokens[3], 10, 64)
+				if err != nil {
+					fmt.Printf("command '%s' arguments format error: %v\n", tokens[0], err)
+					continue
+				}
+				sv["expire"] = v
+			}
+
+			err := enc.Encode(sv)
 			if err != nil {
-				fmt.Println(err)
+				fmt.Printf("send data encode error: %v\n", err)
 				continue
 			}
 			b = append(b, '\n')
 			_, err = conn.Write(b)
 			if err != nil {
-				fmt.Println(err)
+				fmt.Printf("send error: %v\n", err)
 				continue
 			}
 

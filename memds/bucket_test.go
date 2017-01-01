@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/ugorji/go/codec"
 )
@@ -89,8 +90,12 @@ func TestNewBucket(t *testing.T) {
 func TestBucketGet(t *testing.T) {
 	mu := new(sync.RWMutex)
 	var bs []byte
-	enc := codec.NewEncoderBytes(&bs, &mh)
-	enc.Encode("value")
+	codec.NewEncoderBytes(&bs, &mh).Encode(
+		map[string]interface{}{
+			"value":  "value",
+			"expire": int64(0),
+		},
+	)
 	b := Bucket{
 		mu: mu,
 		value: map[string][]byte{
@@ -133,53 +138,70 @@ func TestBucketSet(t *testing.T) {
 		value: map[string][]byte{},
 	}
 
-	var (
-		b0 []byte
-		b1 []byte
-		b2 []byte
-	)
-	enc := codec.NewEncoderBytes(&b0, &mh)
-	enc.Encode("value")
-	enc = codec.NewEncoderBytes(&b1, &mh)
-	enc.Encode("value1")
-	enc = codec.NewEncoderBytes(&b2, &mh)
-	enc.Encode("value2")
+	u := time.Now().UTC().Unix()
+	v0 := Value{
+		"value":  []byte("value"),
+		"expire": int64(0),
+	}
+	v1 := Value{
+		"value":  []byte("value1"),
+		"expire": u + int64(10),
+	}
+	v2 := Value{
+		"value":  []byte("value2"),
+		"expire": u + int64(100),
+	}
 
 	testCase := []struct {
 		Key    string
 		Value  interface{}
-		Result map[string][]byte
+		Expire int64
+		Result map[string]Value
 	}{
 		{
-			Key:   "key",
-			Value: []byte("value"),
-			Result: map[string][]byte{
-				"key": b0,
+			Key:    "key",
+			Value:  "value",
+			Expire: int64(0),
+			Result: map[string]Value{
+				"key": v0,
 			},
 		},
 		{
-			Key:   "key1",
-			Value: []byte("value1"),
-			Result: map[string][]byte{
-				"key":  b0,
-				"key1": b1,
+			Key:    "key1",
+			Value:  "value1",
+			Expire: int64(10),
+			Result: map[string]Value{
+				"key":  v0,
+				"key1": v1,
 			},
 		},
 		{
-			Key:   "key",
-			Value: []byte("value2"),
-			Result: map[string][]byte{
-				"key":  b2,
-				"key1": b1,
+			Key:    "key",
+			Value:  "value2",
+			Expire: int64(100),
+			Result: map[string]Value{
+				"key":  v2,
+				"key1": v1,
 			},
 		},
 	}
 
 	for _, tc := range testCase {
-		b.Set(tc.Key, tc.Value)
+		b.Set(tc.Key, tc.Value, tc.Expire)
 
-		if !reflect.DeepEqual(b.value, tc.Result) {
-			t.Errorf("got: %v, want: %v", b.value, tc.Result)
+		for k, v := range tc.Result {
+			bs, ok := b.value[k]
+			if !ok {
+				t.Errorf("key(%s) not found.", k)
+			}
+			val := Value{}
+			val.Decode(bs)
+			if !reflect.DeepEqual(val.Value(), v.Value()) {
+				t.Errorf("got: %v, want: %v", val.Value(), v.Value())
+			}
+			if val.ExpireAt().Int < v.ExpireAt().Int {
+				t.Errorf("got: %v, want: %v", val.ExpireAt(), v.ExpireAt())
+			}
 		}
 	}
 }
@@ -261,7 +283,7 @@ func BenchmarkBucketSet(b *testing.B) {
 	buc := newBucket()
 	b.ResetTimer()
 	for k, v := range v {
-		buc.Set(k, v)
+		buc.Set(k, v, int64(10))
 	}
 }
 

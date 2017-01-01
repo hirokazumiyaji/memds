@@ -3,8 +3,6 @@ package memds
 import (
 	"hash/crc32"
 	"sync"
-
-	"github.com/ugorji/go/codec"
 )
 
 type Bucket struct {
@@ -56,24 +54,27 @@ func (b *Bucket) Get(k string) (interface{}, error) {
 
 	v, ok := b.value[k]
 	if ok {
-		var r interface{}
-		dec := codec.NewDecoderBytes(v, &mh)
-		if err := dec.Decode(&r); err != nil {
+		value := Value{}
+		err := value.Decode(v)
+		if err != nil {
 			return nil, err
 		}
-		return r, nil
+		if value.IsExpire() {
+			return nil, ValueNotFoundError
+		}
+		return value.Value(), nil
 	} else {
 		return nil, ValueNotFoundError
 	}
 }
 
-func (b *Bucket) Set(k string, v interface{}) error {
+func (b *Bucket) Set(k string, v interface{}, es int64) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	var bs []byte
-	enc := codec.NewEncoderBytes(&bs, &mh)
-	if err := enc.Encode(v); err != nil {
+	value := NewValue(v, es)
+	bs, err := value.Encode()
+	if err != nil {
 		return err
 	}
 	b.value[k] = bs

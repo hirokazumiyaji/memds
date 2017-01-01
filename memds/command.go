@@ -14,6 +14,7 @@ func Exec(b []byte) []byte {
 	}
 
 	c, ok := cmd["cmd"]
+
 	if !ok {
 		return responseCmdFormatError(fmt.Sprintf("key 'cmd' not found"))
 	}
@@ -69,7 +70,20 @@ func Exec(b []byte) []byte {
 			return responseCmdFormatError(fmt.Sprintf("key 'value' not found"))
 		}
 
-		err := Set(ks, v)
+		es := int64(0)
+		expire, ok := cmd["expire"]
+		if ok {
+			switch v := expire.(type) {
+			case int:
+				es = int64(v)
+			case int64:
+				es = v
+			case uint64:
+				es = int64(v)
+			}
+		}
+
+		err := Set(ks, v, es)
 		if err != nil {
 			return responseCmdExecuteError(err.Error())
 		}
@@ -108,12 +122,12 @@ func Get(k string) (interface{}, error) {
 	return b.Get(k)
 }
 
-func Set(k string, v interface{}) error {
+func Set(k string, v interface{}, es int64) error {
 	b := buckets.Get(k)
 	if b == nil {
 		return BucketNotFoundError
 	}
-	return b.Set(k, v)
+	return b.Set(k, v, es)
 }
 
 func Del(k string) error {

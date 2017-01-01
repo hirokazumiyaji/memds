@@ -49,6 +49,9 @@ func Serve(c *Config) error {
 		l.Close()
 	}()
 
+	wg.Add(1)
+	go gc(ctx, &wg, c)
+
 	for {
 		conn, err := l.Accept()
 		if err != nil && closed {

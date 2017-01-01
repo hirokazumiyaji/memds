@@ -14,29 +14,34 @@ func TestGetAndSet(t *testing.T) {
 	buckets, _ = NewBuckets(10)
 
 	setTestCase := []struct {
-		Key   string
-		Value interface{}
-		Err   error
+		Key    string
+		Value  interface{}
+		Expire int64
+		Err    error
 	}{
 		{
-			Key:   "key",
-			Value: []byte("value"),
-			Err:   nil,
+			Key:    "key",
+			Value:  "value",
+			Expire: int64(0),
+			Err:    nil,
 		},
 		{
-			Key:   "key1",
-			Value: []byte("value1"),
-			Err:   nil,
+			Key:    "key1",
+			Value:  "value1",
+			Expire: int64(10000),
+			Err:    nil,
 		},
 		{
-			Key:   "key2",
-			Value: []byte("value2"),
-			Err:   nil,
+			Key:    "key2",
+			Value:  "value2",
+			Expire: int64(0),
+			Err:    nil,
 		},
 		{
-			Key:   "key3",
-			Value: []byte("value3"),
-			Err:   nil,
+			Key:    "key3",
+			Value:  "value3",
+			Expire: int64(0),
+			Err:    nil,
 		},
 	}
 
@@ -73,7 +78,7 @@ func TestGetAndSet(t *testing.T) {
 	}
 
 	for _, tc := range setTestCase {
-		err := Set(tc.Key, tc.Value)
+		err := Set(tc.Key, tc.Value, tc.Expire)
 		if err != tc.Err {
 			t.Errorf("key: %v, got: %v, want: %v", tc.Key, err, tc.Err)
 		}
@@ -90,7 +95,7 @@ func TestGetAndSet(t *testing.T) {
 	}
 
 	buckets = make(Buckets, 0, 10)
-	err := Set("key", []byte("value"))
+	err := Set("key", []byte("value"), int64(0))
 	if err != BucketNotFoundError {
 		t.Errorf("got: %v, want: %v", err, BucketNotFoundError)
 	}
@@ -106,7 +111,7 @@ func TestGetAndSet(t *testing.T) {
 func TestDel(t *testing.T) {
 	buckets, _ = NewBuckets(10)
 
-	Set("key", []byte("value"))
+	Set("key", []byte("value"), int64(0))
 
 	err := Del("key")
 	if err != nil {
@@ -142,7 +147,7 @@ func BenchmarkSet(b *testing.B) {
 	buckets, _ = NewBuckets(10)
 	b.ResetTimer()
 	for k, v := range v {
-		Set(k, v)
+		Set(k, v, int64(0))
 	}
 }
 
