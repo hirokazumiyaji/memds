@@ -10,6 +10,8 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
+
+	"github.com/hirokazumiyaji/memds/log"
 )
 
 func Serve(c *Config) error {
@@ -58,7 +60,7 @@ func Serve(c *Config) error {
 			break
 		}
 		if err != nil {
-			Error(err.Error())
+			log.Error(err.Error())
 			continue
 		}
 		wg.Add(1)
@@ -107,7 +109,7 @@ func accept(ctx context.Context, wg *sync.WaitGroup, c net.Conn) {
 			break
 		}
 		if err != nil {
-			Error(fmt.Sprintf("%v", err))
+			log.Error(fmt.Sprintf("%v", err))
 			break
 		}
 
@@ -115,7 +117,7 @@ func accept(ctx context.Context, wg *sync.WaitGroup, c net.Conn) {
 
 		_, err = c.Write(res)
 		if err != nil {
-			Error(fmt.Sprintf("%v", err))
+			log.Error(fmt.Sprintf("%v", err))
 			break
 		}
 	}

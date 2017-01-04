@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/hirokazumiyaji/memds/log"
 	"github.com/hirokazumiyaji/memds/memds"
 	"github.com/ugorji/go/codec"
 )
@@ -25,10 +26,11 @@ func init() {
 
 func main() {
 	var (
-		host  string
-		port  int
-		sock  string
-		vFlag bool
+		host     string
+		port     int
+		sock     string
+		logLevel string
+		vFlag    bool
 	)
 
 	flag.StringVar(&host, "host", "localhost", "host")
@@ -36,6 +38,8 @@ func main() {
 	flag.IntVar(&port, "p", 6700, "port")
 	flag.StringVar(&sock, "socket", "", "socket")
 	flag.StringVar(&sock, "s", "", "socket")
+	flag.StringVar(&logLevel, "log", "info", "log level")
+	flag.StringVar(&logLevel, "l", "info", "log level")
 	flag.BoolVar(&vFlag, "version", false, "version")
 
 	flag.Parse()
@@ -44,6 +48,8 @@ func main() {
 		fmt.Printf("memdb-cli version: %s\n", version)
 		return
 	}
+
+	log.SetLevel(logLevel)
 
 	var (
 		conn net.Conn
@@ -190,14 +196,15 @@ func main() {
 
 			r, _, err := bufio.NewReader(conn).ReadLine()
 			if err != nil {
-				fmt.Println(err)
+				fmt.Printf("response error: %v\n", err)
+				continue
 			}
 
 			res := make(map[string]interface{})
 			dec := codec.NewDecoderBytes(r, &mh)
 			err = dec.Decode(&res)
 			if err != nil {
-				fmt.Println(err)
+				fmt.Printf("response decode error: %v\n", err)
 				continue
 			}
 
@@ -234,27 +241,28 @@ func main() {
 				},
 			)
 			if err != nil {
-				fmt.Println(err)
+				fmt.Printf("send data encode error: %v\n", err)
 				continue
 			}
 
 			b = append(b, '\n')
 			_, err = conn.Write(b)
 			if err != nil {
-				fmt.Println(err)
+				fmt.Printf("send error: %v\n", err)
 				continue
 			}
 
 			r, _, err := bufio.NewReader(conn).ReadLine()
 			if err != nil {
-				fmt.Println(err)
+				fmt.Printf("response error: %v", err)
+				continue
 			}
 
 			res := make(map[string]interface{})
 			dec := codec.NewDecoderBytes(r, &mh)
 			err = dec.Decode(&res)
 			if err != nil {
-				fmt.Println(err)
+				fmt.Printf("response decode error: %v\n", err)
 				continue
 			}
 

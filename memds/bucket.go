@@ -3,6 +3,9 @@ package memds
 import (
 	"hash/crc32"
 	"sync"
+
+	"github.com/hirokazumiyaji/memds/log"
+	"github.com/uber-go/zap"
 )
 
 type Bucket struct {
@@ -57,8 +60,12 @@ func (b *Bucket) Get(k string) (interface{}, error) {
 		value := Value{}
 		err := value.Decode(v)
 		if err != nil {
+			log.Debug("bucket get value error", zap.Object("error", err))
 			return nil, err
 		}
+
+		log.Debug("bucket get", zap.Object("value", value))
+
 		if value.IsExpire() {
 			return nil, ValueNotFoundError
 		}
@@ -73,8 +80,12 @@ func (b *Bucket) Set(k string, v interface{}, es int64) error {
 	defer b.mu.Unlock()
 
 	value := NewValue(v, es)
+
+	log.Debug("bucket set", zap.Object("value", value))
+
 	bs, err := value.Encode()
 	if err != nil {
+		log.Debug("bucket set value error", zap.Object("error", err))
 		return err
 	}
 	b.value[k] = bs

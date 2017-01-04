@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 
+	"github.com/hirokazumiyaji/memds/log"
 	"github.com/hirokazumiyaji/memds/memds"
 )
 
@@ -17,6 +18,7 @@ func main() {
 		sock       string
 		bucketNum  int
 		gcCycle    int
+		logLevel   string
 		configPath string
 		config     *memds.Config
 		vFlag      bool
@@ -31,6 +33,8 @@ func main() {
 	flag.IntVar(&bucketNum, "bn", 10, "bucket num")
 	flag.IntVar(&gcCycle, "gc_cycle", 10, "expire key gc cycle(sec)")
 	flag.IntVar(&gcCycle, "gc", 10, "expire key gc cycle(sec)")
+	flag.StringVar(&logLevel, "log", "info", "log level")
+	flag.StringVar(&logLevel, "l", "info", "log level")
 	flag.StringVar(&configPath, "config", "", "config path")
 	flag.StringVar(&configPath, "c", "", "config path")
 	flag.BoolVar(&vFlag, "version", false, "version")
@@ -43,6 +47,8 @@ func main() {
 		return
 	}
 
+	log.SetLevel(logLevel)
+
 	if configPath == "" {
 		config = new(memds.Config)
 		config.Port = port
@@ -52,13 +58,14 @@ func main() {
 	} else {
 		config, err = memds.LoadConfig(configPath)
 		if err != nil {
-			memds.Error(err.Error())
+			log.Error(err.Error())
 			return
 		}
 	}
 
-	memds.Info("start memds")
+	log.Info("start memds")
+
 	if err := memds.Serve(config); err != nil {
-		memds.Error(err.Error())
+		log.Error(err.Error())
 	}
 }

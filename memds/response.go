@@ -3,6 +3,7 @@ package memds
 import (
 	"fmt"
 
+	"github.com/hirokazumiyaji/memds/log"
 	"github.com/ugorji/go/codec"
 )
 
@@ -13,7 +14,7 @@ func response(m map[string]interface{}) []byte {
 	var rb []byte
 	enc := codec.NewEncoderBytes(&rb, &mh)
 	if err := enc.Encode(m); err != nil {
-		Error(fmt.Sprintf("response encode error: %v", err))
+		log.Error(fmt.Sprintf("response encode error: %v", err))
 	}
 	rb = append(rb, '\n')
 	return rb
